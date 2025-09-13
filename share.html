@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档分享查看</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link id="hljsThemeLight" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
+    <link id="hljsThemeDark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" disabled>
+    <style>
+        :root {
+            --bg-page: #f7f8fa;
+            --bg-elevated: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --radius: 10px;
+        }
+
+        [data-theme="dark"] {
+            --bg-page: #0f172a;
+            --bg-elevated: #1e293b;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.6);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        body { 
+            background: var(--bg-page); 
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .container { max-width: 900px; }
+        
+        .card { 
+            background: var(--bg-elevated); 
+            border-color: var(--border);
+            box-shadow: var(--shadow-sm);
+            border-radius: var(--radius);
+        }
+        
+        .btn-outline-secondary {
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+        
+        .btn-outline-secondary:hover {
+            background-color: var(--border);
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+        
+        .theme-toggle {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--border);
+        }
+        
+        pre, code { 
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; 
+            font-size: 13px;
+        }
+        
+        pre {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+        }
+        
+        code {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 12px;
+        }
+        
+        blockquote {
+            border-left: 4px solid var(--border);
+            padding-left: 16px;
+            margin: 16px 0;
+            color: var(--text-secondary);
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-primary);
+            margin-top: 20px;
+            margin-bottom: 12px;
+        }
+        
+        h1 { font-size: 1.5em; }
+        h2 { font-size: 1.3em; }
+        h3 { font-size: 1.15em; }
+        h4 { font-size: 1.1em; }
+        h5 { font-size: 1.05em; }
+        h6 { font-size: 1em; }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+        
+        th, td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: var(--bg-elevated);
+            font-weight: 600;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+        
+        /* 深色模式层次化样式 */
+        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+        [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6 {
+            color: #f1f5f9 !important;
+            font-weight: 600;
+        }
+        
+        [data-theme="dark"] h1 {
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+        
+        [data-theme="dark"] p {
+            color: #cbd5e1 !important;
+        }
+        
+        [data-theme="dark"] li {
+            color: #cbd5e1 !important;
+        }
+        
+        [data-theme="dark"] strong {
+            color: #e2e8f0 !important;
+            font-weight: 600;
+        }
+        
+        [data-theme="dark"] em {
+            color: #94a3b8 !important;
+        }
+        
+        [data-theme="dark"] a {
+            color: #60a5fa !important;
+        }
+        
+        [data-theme="dark"] a:hover {
+            color: #93c5fd !important;
+        }
+        
+        [data-theme="dark"] .text-danger {
+            color: #f87171 !important;
+        }
+        
+        [data-theme="dark"] .text-muted {
+            color: #64748b !important;
+        }
+        
+        /* 代码块样式 - 不要太亮 */
+        [data-theme="dark"] pre {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        
+        [data-theme="dark"] code {
+            background-color: #334155 !important;
+            color: #cbd5e1 !important;
+            border-color: #475569 !important;
+        }
+        
+        /* 表格样式 */
+        [data-theme="dark"] table {
+            border-color: #475569 !important;
+        }
+        
+        [data-theme="dark"] th {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+        
+        [data-theme="dark"] td {
+            color: #cbd5e1 !important;
+            border-color: #475569 !important;
+        }
+        
+        /* 引用块 */
+        [data-theme="dark"] blockquote {
+            border-left-color: #475569 !important;
+            color: #94a3b8 !important;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center">
+      <a href="reader.html" class="btn btn-sm btn-outline-secondary me-2">
+        <i class="fas fa-arrow-left me-1"></i>返回阅读器
+      </a>
+      <h5 class="mb-0" id="docTitle">分享文档</h5>
+    </div>
+    <button class="theme-toggle" id="themeToggle">
+      <i class="fas fa-moon me-1"></i>深色
+    </button>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <div id="docContent">加载中...</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+// 主题切换功能
+let isDark = false;
+
+function toggleTheme() {
+    isDark = !isDark;
+    if (isDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun me-1"></i>浅色';
+        document.getElementById('hljsThemeLight').disabled = true;
+        document.getElementById('hljsThemeDark').disabled = false;
+        localStorage.setItem('share-theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon me-1"></i>深色';
+        document.getElementById('hljsThemeLight').disabled = false;
+        document.getElementById('hljsThemeDark').disabled = true;
+        localStorage.setItem('share-theme', 'light');
+    }
+    // 重新高亮代码
+    document.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+}
+
+// 恢复主题设置
+function restoreTheme() {
+    const saved = localStorage.getItem('share-theme');
+    if (saved === 'dark') {
+        isDark = true;
+        toggleTheme();
+    }
+}
+
+// 移除文件扩展名
+function removeFileExtension(filename) {
+    return filename.replace(/\.(md|txt)$/i, '');
+}
+
+async function fetchFile(filename) {
+  const res = await fetch(`./markdown_api.php/files/${encodeURIComponent(filename)}`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || '加载失败');
+  return data.data;
+}
+
+function renderMarkdown(md) {
+  const html = marked.parse(md);
+  const clean = DOMPurify.sanitize(html);
+  document.getElementById('docContent').innerHTML = clean;
+  document.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+}
+
+// 初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 设置主题切换事件
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    
+    // 恢复主题设置
+    restoreTheme();
+    
+    // 加载文档
+    const params = new URLSearchParams(location.search);
+    const file = params.get('file');
+    if (!file) {
+        document.getElementById('docContent').innerHTML = '<div class="text-danger">缺少文件参数</div>';
+        return;
+    }
+    
+    // 设置标题（移除.md后缀）
+    const cleanTitle = removeFileExtension(file);
+    document.getElementById('docTitle').textContent = cleanTitle;
+    document.title = cleanTitle + ' - 文档分享查看';
+    
+    // 加载文件内容
+    fetchFile(file).then(result => {
+        renderMarkdown(result.content || '');
+    }).catch(async e => {
+        // 如果提示需要密码，则让用户输入
+        if (String(e.message).includes('需要分享密码') || String(e.message).includes('401')) {
+            const pwd = prompt('该分享需要密码，请输入：');
+            if (pwd !== null) {
+                try {
+                    const res = await fetch(`./markdown_api.php/files/${encodeURIComponent(file)}?password=${encodeURIComponent(pwd)}`);
+                    const data = await res.json();
+                    if (data && data.success) {
+                        renderMarkdown(data.data.content || '');
+                    } else {
+                        document.getElementById('docContent').innerHTML = `<div class=\"text-danger\">${data.error || '密码错误或访问被拒绝'}</div>`;
+                    }
+                } catch (err) {
+                    document.getElementById('docContent').innerHTML = `<div class=\"text-danger\">加载失败：${err.message}</div>`;
+                }
+            }
+        } else {
+            document.getElementById('docContent').innerHTML = `<div class=\"text-danger\">加载失败：${e.message}</div>`;
+        }
+    });
+});
+</script>
+</body>
+</html>
+
+

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown文档管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .logo {
+            font-size: 64px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #6c757d;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .feature-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .admin-icon {
+            color: #dc3545;
+        }
+        
+        .reader-icon {
+            color: #28a745;
+        }
+        
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .feature-desc {
+            font-size: 14px;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .btn-custom {
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 14px;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .btn-outline-custom {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-outline-custom:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .feature-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                flex-direction: column;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .main-container {
+                margin: 20px;
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container mx-auto">
+            <div class="logo">
+                <i class="fas fa-book-open"></i>
+            </div>
+            
+            <h1 class="title">Markdown文档管理系统</h1>
+            <p class="subtitle">
+                专业的Markdown文档管理和阅读平台<br>
+                支持文档编辑、管理和优雅的阅读体验
+            </p>
+            
+            <!-- 统计信息 -->
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalDocs">0</div>
+                    <div class="stat-label">文档总数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalWords">0</div>
+                    <div class="stat-label">总字数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="lastUpdate">今天</div>
+                    <div class="stat-label">最后更新</div>
+                </div>
+            </div>
+            
+            <!-- 功能卡片 -->
+            <div class="feature-cards">
+                <a href="login.html" class="feature-card">
+                    <div class="feature-icon admin-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="feature-title">管理后台</div>
+                    <div class="feature-desc">
+                        创建、编辑、删除Markdown文档<br>
+                        实时预览和文件管理
+                    </div>
+                </a>
+                
+                <a href="reader.html" class="feature-card">
+                    <div class="feature-icon reader-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="feature-title">阅读模式</div>
+                    <div class="feature-desc">
+                        优雅的阅读界面<br>
+                        左侧导航，右侧内容
+                    </div>
+                </a>
+            </div>
+            
+            <!-- 快速操作 -->
+            <div class="quick-actions">
+                <a href="login.html" class="btn-custom btn-primary-custom">
+                    <i class="fas fa-plus me-2"></i>创建新文档
+                </a>
+                <a href="reader.html" class="btn-custom btn-outline-custom">
+                    <i class="fas fa-book me-2"></i>开始阅读
+                </a>
+            </div>
+            
+            <div class="footer">
+                <p>© 2025 Markdown文档管理系统 - 简洁、高效、专业</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript库 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+        });
+        
+        // 更新统计信息
+        function updateStats() {
+            const saved = localStorage.getItem('markdownFiles');
+            let files = {};
+            
+            if (saved) {
+                files = JSON.parse(saved);
+            }
+            
+            const totalDocs = Object.keys(files).length;
+            let totalWords = 0;
+            let lastUpdateTime = null;
+            
+            Object.values(files).forEach(file => {
+                // 计算字数（简单统计）
+                const wordCount = file.content.replace(/[^\u4e00-\u9fa5\w]/g, '').length;
+                totalWords += wordCount;
+                
+                // 找到最新更新时间
+                const updateTime = new Date(file.updated);
+                if (!lastUpdateTime || updateTime > lastUpdateTime) {
+                    lastUpdateTime = updateTime;
+                }
+            });
+            
+            // 更新显示
+            document.getElementById('totalDocs').textContent = totalDocs;
+            document.getElementById('totalWords').textContent = totalWords.toLocaleString();
+            
+            if (lastUpdateTime) {
+                const now = new Date();
+                const diff = now - lastUpdateTime;
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                
+                if (days === 0) {
+                    document.getElementById('lastUpdate').textContent = '今天';
+                } else if (days === 1) {
+                    document.getElementById('lastUpdate').textContent = '昨天';
+                } else if (days < 7) {
+                    document.getElementById('lastUpdate').textContent = `${days}天前`;
+                } else {
+                    document.getElementById('lastUpdate').textContent = lastUpdateTime.toLocaleDateString();
+                }
+            } else {
+                document.getElementById('lastUpdate').textContent = '-';
+            }
+        }
+        
+        // 监听存储变化
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'markdownFiles') {
+                updateStats();
+            }
+        });
+    </script>
+</body>
+</html>

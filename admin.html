@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown文件管理后台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .main-container {
+            margin: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: calc(100vh - 70px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar {
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .file-list {
+            padding: 15px;
+        }
+        
+        .file-item {
+            padding: 8px 12px;
+            margin: 2px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+        
+        .file-item:hover {
+            background: #e9ecef;
+        }
+        
+        .file-item.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .file-item i {
+            margin-right: 8px;
+            width: 16px;
+        }
+        
+        .content-area {
+            padding: 0;
+        }
+        
+        .editor-header {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-header h6 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .editor-content {
+            height: calc(100vh - 180px);
+            display: flex;
+        }
+        
+        .editor-panel {
+            flex: 1;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .preview-panel {
+            flex: 1;
+            padding: 15px;
+            background: #fafafa;
+            overflow-y: auto;
+        }
+        
+        .CodeMirror {
+            height: 100%;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            border-color: #28a745;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            border-color: #dc3545;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        
+        .form-control, .form-select {
+            font-size: 13px;
+            padding: 6px 10px;
+        }
+        
+        .modal-content {
+            border-radius: 8px;
+        }
+        
+        .modal-header {
+            background: #667eea;
+            color: white;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .preview-content {
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .preview-content h1, .preview-content h2, .preview-content h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .preview-content h1 {
+            font-size: 24px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+        
+        .preview-content h2 {
+            font-size: 20px;
+        }
+        
+        .preview-content h3 {
+            font-size: 16px;
+        }
+        
+        .preview-content code {
+            background: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        
+        .preview-content pre {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        
+        .preview-content blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #6c757d;
+        }
+        
+        .preview-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        
+        .preview-content table th,
+        .preview-content table td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        .preview-content table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .stats-bar {
+            background: white;
+            padding: 12px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-item {
+            font-size: 13px;
+            color: #6c757d;
+        }
+        
+        .stats-item strong {
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <i class="fas fa-cogs me-2"></i>Markdown文件管理后台
+            </span>
+            <div>
+                <a href="reader.html" class="btn btn-outline-light btn-sm me-2">
+                    <i class="fas fa-eye me-1"></i>阅读模式
+                </a>
+                <!-- <button class="btn btn-outline-light btn-sm me-2" id="exportAllBtn">
+                    <i class="fas fa-download me-1"></i>导出全部
+                </button> -->
+                <button class="btn btn-outline-light btn-sm me-2" id="settingsBtn">
+                    <i class="fas fa-cog me-1"></i>系统设置
+                </button>
+                <button class="btn btn-outline-light btn-sm" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt me-1"></i>退出登录
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- 统计栏 -->
+            <div class="stats-bar">
+                <div class="stats-item">
+                    <strong id="totalFiles">0</strong> 个文件
+                </div>
+                <div class="stats-item">
+                    最后更新: <strong id="lastUpdate">-</strong>
+                </div>
+                <div>
+                    <button class="btn btn-primary btn-sm" id="newFileBtn">
+                        <i class="fas fa-plus me-1"></i>新建文件
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-0 flex-grow-1">
+                <!-- 左侧文件列表 -->
+                <div class="col-md-2">
+                    <div class="sidebar">
+                        <div class="file-list">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-folder me-2 text-muted"></i>
+                                <strong class="text-muted">文件列表</strong>
+                            </div>
+                            <div id="fileList">
+                                <!-- 文件列表将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧编辑区域 -->
+                <div class="col-md-10">
+                    <div class="content-area h-100">
+                        <div id="editorContainer" style="display: none;">
+                            <div class="editor-header">
+                                <h6 id="currentFileName">
+                                    <i class="fas fa-file-alt me-2"></i>未选择文件
+                                </h6>
+                                <div>
+                                    <button class="btn btn-success btn-sm me-2" id="saveFileBtn">
+                                        <i class="fas fa-save me-1"></i>保存
+                                    </button>
+                                    <button class="btn btn-warning btn-sm me-2" id="renameFileBtn">
+                                        <i class="fas fa-edit me-1"></i>重命名
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" id="deleteFileBtn">
+                                        <i class="fas fa-trash me-1"></i>删除
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="editor-content">
+                                <div class="editor-panel">
+                                    <textarea id="markdownEditor"></textarea>
+                                </div>
+                                <div class="preview-panel">
+                                    <h6 class="text-muted mb-3">
+                                        <i class="fas fa-eye me-2"></i>实时预览
+                                    </h6>
+                                    <div id="markdownPreview" class="preview-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="emptyState" class="empty-state">
+                            <i class="fas fa-file-alt"></i>
+                            <h5>欢迎使用Markdown文件管理后台</h5>
+                            <p>请选择一个文件进行编辑，或创建新文件</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建文件模态框 -->
+    <div class="modal fade" id="newFileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>新建Markdown文件
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newFileForm">
+                        <div class="mb-3">
+                            <label for="fileName" class="form-label">文件名</label>
+                            <input type="text" class="form-control" id="fileName" placeholder="例如: 我的文档" required>
+                            <div class="form-text">文件名将自动添加 .md 扩展名</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fileContent" class="form-label">初始内容</label>
+                            <textarea class="form-control" id="fileContent" rows="8" placeholder="# 标题
+
+在这里开始编写你的Markdown内容..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="createFileBtn">创建文件</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重命名文件模态框 -->
+    <div class="modal fade" id="renameFileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>重命名文件
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="renameFileForm">
+                        <div class="mb-3">
+                            <label for="newFileName" class="form-label">新文件名</label>
+                            <input type="text" class="form-control" id="newFileName" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirmRenameBtn">确认重命名</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统设置模态框 -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-cog me-2"></i>系统设置
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button">
+                                <i class="fas fa-key me-1"></i>修改密码
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button">
+                                <i class="fas fa-globe me-1"></i>访问控制
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="whitelist-tab" data-bs-toggle="tab" data-bs-target="#whitelist" type="button">
+                                <i class="fas fa-shield-alt me-1"></i>IP白名单
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="share-tab" data-bs-toggle="tab" data-bs-target="#share" type="button">
+                                <i class="fas fa-share-alt me-1"></i>分享设置
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content mt-3" id="settingsTabContent">
+                        <!-- 修改密码 -->
+                        <div class="tab-pane fade show active" id="password" role="tabpanel">
+                            <form id="passwordForm">
+                                <div class="mb-3">
+                                    <label for="oldPassword" class="form-label">当前密码</label>
+                                    <input type="password" class="form-control" id="oldPassword" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="newPassword" class="form-label">新密码</label>
+                                    <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                    <div class="form-text">密码长度至少6位</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">确认新密码</label>
+                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>修改密码
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- 访问控制 -->
+                        <div class="tab-pane fade" id="access" role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label">前端访问控制</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="frontendAccess" id="publicAccess" value="public">
+                                    <label class="form-check-label" for="publicAccess">
+                                        <strong>公开访问</strong>
+                                        <div class="form-text">任何人都可以访问阅读界面，无需登录</div>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="frontendAccess" id="privateAccess" value="private">
+                                    <label class="form-check-label" for="privateAccess">
+                                        <strong>需要登录</strong>
+                                        <div class="form-text">访问阅读界面需要先登录管理员账号</div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>说明：</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>管理后台始终需要登录才能访问</li>
+                                    <li>此设置仅影响阅读界面的访问权限</li>
+                                    <li>修改后立即生效</li>
+                                </ul>
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary" id="saveAccessBtn">
+                                <i class="fas fa-save me-1"></i>保存设置
+                            </button>
+                        </div>
+                        
+                        <!-- IP白名单 -->
+                        <div class="tab-pane fade" id="whitelist" role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label">IP白名单管理</label>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" id="newIP" placeholder="输入IP地址，如：192.168.1.1">
+                                    <button class="btn btn-outline-primary" type="button" id="addIPBtn">
+                                        <i class="fas fa-plus"></i>添加
+                                    </button>
+                                </div>
+                                <div class="form-text">每行一个IP地址，支持IPv4格式</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">当前白名单</label>
+                                <div id="whitelistList" class="border rounded p-3" style="min-height: 150px; max-height: 200px; overflow-y: auto;">
+                                    <div class="text-muted text-center">加载中...</div>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-success" id="saveWhitelistBtn">
+                                <i class="fas fa-save me-1"></i>保存白名单
+                            </button>
+                        </div>
+
+                        <!-- 分享设置 -->
+                        <div class="tab-pane fade" id="share" role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label">分享访问密码（留空表示不需要密码）</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="sharePassword" placeholder="输入分享密码或留空">
+                                    <button class="btn btn-primary" type="button" id="saveSharePasswordBtn">
+                                        <i class="fas fa-save me-1"></i>保存
+                                    </button>
+                                </div>
+                                <div class="form-text">设置后，分享页会要求输入该密码；留空则任何人可直接访问。</div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">锁定文件（上锁后，分享链接不可访问）</label>
+                                <div id="lockedFilesInfo" class="text-muted">加载中...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript库 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+    
+    <script>
+        console.log('脚本开始加载...');
+        
+        // 全局变量
+        let files = {};
+        let currentFile = null;
+        let markdownEditor;
+        const API_URL = './markdown_api.php';
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM内容已加载');
+            
+            // 检查认证状态
+            checkAuthStatus();
+            
+            initializeApp();
+        });
+        
+        // 检查认证状态
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('./auth_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'check'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success || !result.authenticated) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                console.log('认证成功，用户:', result.username);
+            } catch (error) {
+                console.error('认证检查失败:', error);
+                window.location.href = 'login.html';
+            }
+        }
+        
+        function initializeApp() {
+            console.log('开始初始化应用...');
+            initializeEditor();
+            bindEvents();
+            loadFiles();
+            updateStats();
+        }
+        
+        function bindEvents() {
+            console.log('绑定事件监听器...');
+            
+            // 新建文件按钮
+            const newFileBtn = document.getElementById('newFileBtn');
+            if (newFileBtn) {
+                newFileBtn.addEventListener('click', function() {
+                    console.log('点击新建文件按钮');
+                    showNewFileModal();
+                });
+            }
+            
+            // 创建文件按钮
+            const createFileBtn = document.getElementById('createFileBtn');
+            if (createFileBtn) {
+                createFileBtn.addEventListener('click', function() {
+                    console.log('点击创建文件按钮');
+                    createNewFile();
+                });
+            }
+            
+            // 导出全部按钮
+            const exportAllBtn = document.getElementById('exportAllBtn');
+            if (exportAllBtn) {
+                exportAllBtn.addEventListener('click', exportAll);
+            }
+            
+            // 系统设置按钮
+            document.getElementById('settingsBtn').addEventListener('click', function() {
+                const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+                modal.show();
+                loadWhitelist();
+                loadAccessControl();
+                loadShareSettings();
+            });
+            
+            // 退出登录按钮
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            
+            // 密码修改表单
+            document.getElementById('passwordForm').addEventListener('submit', changePassword);
+            
+            // IP白名单管理
+            document.getElementById('addIPBtn').addEventListener('click', addIPToWhitelist);
+            document.getElementById('saveWhitelistBtn').addEventListener('click', saveWhitelist);
+            
+            // 访问控制
+            document.getElementById('saveAccessBtn').addEventListener('click', saveAccessControl);
+            // 分享设置
+            const saveShareBtn = document.getElementById('saveSharePasswordBtn');
+            if (saveShareBtn) {
+                saveShareBtn.addEventListener('click', saveSharePassword);
+            }
+            
+            // 保存文件按钮
+            const saveFileBtn = document.getElementById('saveFileBtn');
+            if (saveFileBtn) {
+                saveFileBtn.addEventListener('click', saveCurrentFile);
+            }
+            
+            // 重命名文件按钮
+            const renameFileBtn = document.getElementById('renameFileBtn');
+            if (renameFileBtn) {
+                renameFileBtn.addEventListener('click', renameCurrentFile);
+            }
+            
+            // 删除文件按钮
+            const deleteFileBtn = document.getElementById('deleteFileBtn');
+            if (deleteFileBtn) {
+                deleteFileBtn.addEventListener('click', deleteCurrentFile);
+            }
+            
+            // 确认重命名按钮
+            const confirmRenameBtn = document.getElementById('confirmRenameBtn');
+            if (confirmRenameBtn) {
+                confirmRenameBtn.addEventListener('click', confirmRename);
+            }
+            
+            // 键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    saveCurrentFile();
+                }
+            });
+            
+            console.log('事件绑定完成');
+        }
+        
+        function showNewFileModal() {
+            console.log('显示新建文件模态框');
+            const modal = new bootstrap.Modal(document.getElementById('newFileModal'));
+            modal.show();
+        }
+        
+        // 初始化编辑器
+        function initializeEditor() {
+            console.log('初始化编辑器...');
+            markdownEditor = CodeMirror.fromTextArea(document.getElementById('markdownEditor'), {
+                mode: 'markdown',
+                theme: 'monokai',
+                lineNumbers: true,
+                lineWrapping: true,
+                autofocus: true,
+                indentUnit: 2,
+                tabSize: 2
+            });
+            
+            // 实时预览
+            markdownEditor.on('change', function() {
+                updatePreview();
+            });
+            
+            console.log('编辑器初始化完成');
+        }
+        
+        // 更新预览
+        function updatePreview() {
+            const content = markdownEditor.getValue();
+            const html = marked.parse(content);
+            const cleanHtml = DOMPurify.sanitize(html);
+            document.getElementById('markdownPreview').innerHTML = cleanHtml;
+        }
+        
+        // API调用函数
+        async function apiCall(method, endpoint, data = null) {
+            console.log(`API调用: ${method} ${endpoint}`, data);
+            
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, options);
+                const result = await response.json();
+                
+                console.log('API响应:', result);
+                
+                if (!response.ok) {
+                    throw new Error(result.error || '请求失败');
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('API调用失败:', error);
+                showNotification(`API调用失败: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        // 加载文件列表
+        async function loadFiles() {
+            console.log('加载文件列表...');
+            try {
+                const result = await apiCall('GET', '/files');
+                files = result.data || {};
+                
+                if (Object.keys(files).length === 0) {
+                    console.log('创建示例文件...');
+                    await createWelcomeFile();
+                }
+                
+                renderFileList();
+                updateStats();
+            } catch (error) {
+                console.error('加载文件失败，使用离线模式:', error);
+                showNotification('服务器连接失败，使用离线模式', 'warning');
+                // 加载本地示例文件
+                loadOfflineFiles();
+            }
+        }
+        
+        async function createWelcomeFile() {
+            const welcomeContent = `# 欢迎使用Markdown文档管理系统
+
+这是一个专业的Markdown文档管理和阅读平台。
+
+## 快速开始
+
+### 基本操作
+1. **创建文档**: 点击"新建文件"按钮
+2. **编辑文档**: 在左侧编辑器中输入内容，右侧实时预览
+3. **保存文档**: 使用Ctrl+S或点击保存按钮
+
+### 功能特色
+- ✅ 实时预览
+- ✅ 语法高亮
+- ✅ 文件管理
+- ✅ 跨设备同步
+
+开始创建你的第一个文档吧！`;
+
+            try {
+                const result = await apiCall('POST', '/files', {
+                    name: 'welcome.md',
+                    content: welcomeContent
+                });
+                files['welcome.md'] = result.data;
+            } catch (error) {
+                console.error('创建欢迎文件失败:', error);
+            }
+        }
+        
+        function loadOfflineFiles() {
+            files = {
+                'welcome.md': {
+                    name: 'welcome.md',
+                    content: '# 欢迎使用Markdown编辑器\n\n这是一个离线版本的示例文件。',
+                    created: new Date().toISOString(),
+                    updated: new Date().toISOString()
+                }
+            };
+            renderFileList();
+            updateStats();
+        }
+        
+        // 渲染文件列表
+        function renderFileList() {
+            console.log('渲染文件列表...');
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            
+            Object.keys(files).sort().forEach(filename => {
+                const file = files[filename];
+                const item = document.createElement('div');
+                item.className = 'file-item d-flex align-items-center justify-content-between';
+                item.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-file-alt"></i>
+                        <span>${filename}</span>
+                    </div>
+                    <div class="ms-2">
+                        <i class="fas fa-lock${file.locked ? '' : '-open'} text-muted toggle-lock" title="${file.locked ? '已上锁，点击解锁' : '未上锁，点击上锁'}" data-fn="${filename}"></i>
+                    </div>
+                `;
+                item.addEventListener('click', (e) => {
+                    if (e.target && e.target.classList.contains('toggle-lock')) return; // 点击锁图标不触发打开
+                    openFile(filename)
+                });
+                item.querySelector('.toggle-lock').addEventListener('click', async (e) => {
+                    const fn = e.target.getAttribute('data-fn');
+                    const lockedNow = e.target.classList.contains('fa-lock');
+                    try {
+                        const resp = await fetch('./auth_api.php', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'set_file_lock', filename: fn, locked: !lockedNow })
+                        });
+                        const res = await resp.json();
+                        if (res.success) {
+                            // 刷新列表
+                            loadFiles();
+                        } else {
+                            showNotification(res.message || '更新失败', 'error');
+                        }
+                    } catch (err) {
+                        showNotification('网络错误', 'error');
+                    }
+                });
+                fileList.appendChild(item);
+            });
+            
+            console.log(`渲染了 ${Object.keys(files).length} 个文件`);
+        }
+        
+        // 打开文件
+        function openFile(filename) {
+            console.log('打开文件:', filename);
+            currentFile = filename;
+            const file = files[filename];
+            
+            // 更新UI
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.file-item').classList.add('active');
+            
+            document.getElementById('currentFileName').innerHTML = `
+                <i class="fas fa-file-alt me-2"></i>${filename}
+            `;
+            
+            markdownEditor.setValue(file.content);
+            updatePreview();
+            
+            document.getElementById('editorContainer').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+        }
+        
+        // 创建新文件
+        async function createNewFile() {
+            console.log('创建新文件...');
+            
+            try {
+                const fileName = document.getElementById('fileName').value.trim();
+                const fileContent = document.getElementById('fileContent').value;
+                
+                if (!fileName) {
+                    showNotification('请输入文件名', 'error');
+                    return;
+                }
+                
+                const filename = fileName.endsWith('.md') ? fileName : fileName + '.md';
+                
+                if (files[filename]) {
+                    showNotification('文件已存在', 'error');
+                    return;
+                }
+                
+                console.log('发送创建请求:', filename);
+                
+                const result = await apiCall('POST', '/files', {
+                    name: filename,
+                    content: fileContent || `# ${fileName}\n\n`
+                });
+                
+                files[filename] = result.data;
+                renderFileList();
+                
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('newFileModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // 清空表单
+                document.getElementById('newFileForm').reset();
+                
+                // 打开新文件
+                setTimeout(() => {
+                    const fileItems = document.querySelectorAll('.file-item');
+                    const newItem = Array.from(fileItems).find(item => 
+                        item.textContent.trim() === filename
+                    );
+                    if (newItem) {
+                        newItem.click();
+                    }
+                }, 100);
+                
+                showNotification('文件创建成功！', 'success');
+                updateStats();
+                
+            } catch (error) {
+                console.error('创建文件失败:', error);
+                showNotification('创建失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 保存当前文件
+        async function saveCurrentFile() {
+            if (!currentFile) {
+                showNotification('没有打开的文件', 'warning');
+                return;
+            }
+            
+            try {
+                const content = markdownEditor.getValue();
+                const result = await apiCall('POST', '/files', {
+                    name: currentFile,
+                    content: content
+                });
+                
+                files[currentFile] = result.data;
+                showNotification('文件保存成功！', 'success');
+                updateStats();
+            } catch (error) {
+                console.error('保存文件失败:', error);
+                showNotification('保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 重命名当前文件
+        function renameCurrentFile() {
+            if (!currentFile) return;
+            
+            document.getElementById('newFileName').value = currentFile.replace('.md', '');
+            const modal = new bootstrap.Modal(document.getElementById('renameFileModal'));
+            modal.show();
+        }
+        
+        // 确认重命名
+        async function confirmRename() {
+            const newName = document.getElementById('newFileName').value.trim();
+            if (!newName) {
+                showNotification('请输入新文件名', 'error');
+                return;
+            }
+            
+            const newFilename = newName.endsWith('.md') ? newName : newName + '.md';
+            
+            if (files[newFilename]) {
+                showNotification('文件名已存在', 'error');
+                return;
+            }
+            
+            try {
+                // 创建新文件
+                await apiCall('POST', '/files', {
+                    name: newFilename,
+                    content: files[currentFile].content
+                });
+                
+                // 删除旧文件
+                await apiCall('DELETE', `/files/${encodeURIComponent(currentFile)}`);
+                
+                // 更新本地数据
+                files[newFilename] = files[currentFile];
+                files[newFilename].name = newFilename;
+                delete files[currentFile];
+                
+                currentFile = newFilename;
+                renderFileList();
+                
+                document.getElementById('currentFileName').innerHTML = `
+                    <i class="fas fa-file-alt me-2"></i>${newFilename}
+                `;
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('renameFileModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                showNotification('文件重命名成功！', 'success');
+                updateStats();
+            } catch (error) {
+                showNotification('重命名失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 删除当前文件
+        async function deleteCurrentFile() {
+            if (!currentFile) return;
+            
+            if (confirm(`确定要删除文件 "${currentFile}" 吗？`)) {
+                try {
+                    await apiCall('DELETE', `/files/${encodeURIComponent(currentFile)}`);
+                    delete files[currentFile];
+                    renderFileList();
+                    
+                    // 关闭编辑器
+                    document.getElementById('editorContainer').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'block';
+                    currentFile = null;
+                    
+                    showNotification('文件删除成功！', 'success');
+                    updateStats();
+                } catch (error) {
+                    showNotification('删除失败: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        // 导出全部文件
+        function exportAll() {
+            const data = {
+                files: files,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `markdown_files_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('文件导出成功！', 'success');
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            const totalFiles = Object.keys(files).length;
+            document.getElementById('totalFiles').textContent = totalFiles;
+            
+            if (totalFiles > 0) {
+                const latestFile = Object.values(files).reduce((latest, file) => {
+                    return new Date(file.updated) > new Date(latest.updated) ? file : latest;
+                });
+                document.getElementById('lastUpdate').textContent = 
+                    new Date(latestFile.updated).toLocaleString();
+            } else {
+                document.getElementById('lastUpdate').textContent = '-';
+            }
+        }
+        
+        // 通知功能
+        function showNotification(message, type = 'info') {
+            console.log(`通知: ${message} (${type})`);
+            
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'error' ? 'alert-danger' : 
+                              type === 'warning' ? 'alert-warning' : 'alert-info';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+        
+        // ========== 认证和设置功能 ==========
+        
+        // 退出登录
+        async function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                try {
+                    await fetch('./auth_api.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'logout'
+                        })
+                    });
+                    
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    console.error('退出登录失败:', error);
+                    window.location.href = 'login.html';
+                }
+            }
+        }
+        
+        // 修改密码
+        async function changePassword(e) {
+            e.preventDefault();
+            
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                alert('新密码和确认密码不匹配');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                alert('新密码长度至少6位');
+                return;
+            }
+            
+            try {
+                const response = await fetch('./auth_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'change_password',
+                        old_password: oldPassword,
+                        new_password: newPassword
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('密码修改成功');
+                    document.getElementById('passwordForm').reset();
+                    bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+                } else {
+                    alert(result.message || '密码修改失败');
+                }
+            } catch (error) {
+                console.error('修改密码失败:', error);
+                alert('网络错误，请稍后重试');
+            }
+        }
+        
+        // 加载IP白名单
+        async function loadWhitelist() {
+            try {
+                const response = await fetch('./auth_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'get_whitelist'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayWhitelist(result.whitelist);
+                } else {
+                    document.getElementById('whitelistList').innerHTML = 
+                        '<div class="text-danger text-center">加载失败: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                console.error('加载白名单失败:', error);
+                document.getElementById('whitelistList').innerHTML = 
+                    '<div class="text-danger text-center">网络错误，请稍后重试</div>';
+            }
+        }
+        
+        // 显示IP白名单
+        function displayWhitelist(whitelist) {
+            const container = document.getElementById('whitelistList');
+            
+            if (whitelist.length === 0) {
+                container.innerHTML = '<div class="text-muted text-center">暂无IP白名单</div>';
+                return;
+            }
+            
+            let html = '';
+            whitelist.forEach((ip, index) => {
+                html += `
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                        <span class="text-monospace">${ip}</span>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeIPFromWhitelist(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 添加IP到白名单
+        function addIPToWhitelist() {
+            const newIP = document.getElementById('newIP').value.trim();
+            
+            if (!newIP) {
+                alert('请输入IP地址');
+                return;
+            }
+            
+            // 验证IP格式
+            const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            if (!ipRegex.test(newIP)) {
+                alert('请输入有效的IPv4地址');
+                return;
+            }
+            
+            // 添加到当前显示的白名单
+            const container = document.getElementById('whitelistList');
+            const currentHTML = container.innerHTML;
+            
+            if (currentHTML.includes('暂无IP白名单')) {
+                container.innerHTML = '';
+            }
+            
+            const newItem = `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                    <span class="text-monospace">${newIP}</span>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeIPFromWhitelist(${container.children.length})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', newItem);
+            document.getElementById('newIP').value = '';
+        }
+        
+        // 从白名单中移除IP
+        function removeIPFromWhitelist(index) {
+            const container = document.getElementById('whitelistList');
+            const items = container.children;
+            
+            if (index >= 0 && index < items.length) {
+                items[index].remove();
+                
+                // 重新编号删除按钮
+                Array.from(items).forEach((item, i) => {
+                    const btn = item.querySelector('button');
+                    if (btn) {
+                        btn.setAttribute('onclick', `removeIPFromWhitelist(${i})`);
+                    }
+                });
+            }
+        }
+        
+        // 保存白名单
+        async function saveWhitelist() {
+            const container = document.getElementById('whitelistList');
+            const items = container.children;
+            const whitelist = [];
+            
+            Array.from(items).forEach(item => {
+                const ipSpan = item.querySelector('span');
+                if (ipSpan) {
+                    whitelist.push(ipSpan.textContent.trim());
+                }
+            });
+            
+            try {
+                const response = await fetch('./auth_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'update_whitelist',
+                        whitelist: whitelist
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('IP白名单保存成功');
+                    bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+                } else {
+                    alert(result.message || '保存失败');
+                }
+            } catch (error) {
+                console.error('保存白名单失败:', error);
+                alert('网络错误，请稍后重试');
+            }
+        }
+        
+        // 保存访问控制设置
+        async function saveAccessControl() {
+            const selectedAccess = document.querySelector('input[name="frontendAccess"]:checked');
+            
+            if (!selectedAccess) {
+                alert('请选择访问控制模式');
+                return;
+            }
+            
+            try {
+                const response = await fetch('./auth_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'update_frontend_access',
+                        frontend_access: selectedAccess.value
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('访问控制设置保存成功');
+                    bootstrap.Modal.getInstance(document.getElementById('settingsModal')).hide();
+                } else {
+                    alert(result.message || '保存失败');
+                }
+            } catch (error) {
+                console.error('保存访问控制设置失败:', error);
+                alert('网络错误，请稍后重试');
+            }
+        }
+        
+        // 加载访问控制设置
+        async function loadAccessControl() {
+            try {
+                const response = await fetch('./auth_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'get_frontend_access'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const accessMode = result.frontend_access || 'public';
+                    document.getElementById(accessMode + 'Access').checked = true;
+                }
+            } catch (error) {
+                console.error('加载访问控制设置失败:', error);
+            }
+        }
+
+        // 加载分享设置
+        async function loadShareSettings() {
+            try {
+                const resp = await fetch('./auth_api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_share_settings' })});
+                const res = await resp.json();
+                if (res.success) {
+                    document.getElementById('sharePassword').value = '';
+                    document.getElementById('lockedFilesInfo').textContent = res.locked_files.length ? ('已上锁文件：' + res.locked_files.join(', ')) : '当前没有上锁文件';
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // 保存分享密码
+        async function saveSharePassword() {
+            const pwd = document.getElementById('sharePassword').value;
+            try {
+                const resp = await fetch('./auth_api.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_share_password', share_password: pwd })});
+                const res = await resp.json();
+                if (res.success) {
+                    alert('分享密码已更新');
+                } else {
+                    alert(res.message || '保存失败');
+                }
+            } catch (e) { alert('网络错误'); }
+        }
+
+        // 切换分享密码锁定状态
+        function toggleSharePassword() {
+            const passwordInput = document.getElementById('sharePassword');
+            const lockBtn = document.getElementById('lockBtn');
+            const isLocked = passwordInput.value.trim() !== '';
+            passwordInput.disabled = !isLocked;
+            lockBtn.innerHTML = isLocked ? '<i class="fas fa-lock"></i>' : '<i class="fas fa-unlock"></i>';
+            if (isLocked) {
+                passwordInput.type = 'password';
+            } else {
+                passwordInput.type = 'text'; // 方便查看
+            }
+        }
+        
+        console.log('脚本加载完成');
+    </script>
+</body>
+</html>
