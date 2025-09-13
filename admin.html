@@ -852,7 +852,7 @@
                 `;
                 item.addEventListener('click', (e) => {
                     if (e.target && e.target.classList.contains('toggle-lock')) return; // 点击锁图标不触发打开
-                    openFile(filename)
+                    openFile(filename, e.currentTarget)
                 });
                 item.querySelector('.toggle-lock').addEventListener('click', async (e) => {
                     const fn = e.target.getAttribute('data-fn');
@@ -880,7 +880,7 @@
         }
         
         // 打开文件
-        function openFile(filename) {
+        function openFile(filename, itemEl) {
             console.log('打开文件:', filename);
             currentFile = filename;
             const file = files[filename];
@@ -889,7 +889,9 @@
             document.querySelectorAll('.file-item').forEach(item => {
                 item.classList.remove('active');
             });
-            event.target.closest('.file-item').classList.add('active');
+            if (itemEl) {
+                itemEl.classList.add('active');
+            }
             
             document.getElementById('currentFileName').innerHTML = `
                 <i class="fas fa-file-alt me-2"></i>${filename}

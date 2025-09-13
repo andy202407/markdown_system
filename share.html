@@ -273,8 +273,12 @@ function removeFileExtension(filename) {
     return filename.replace(/\.(md|txt)$/i, '');
 }
 
-async function fetchFile(filename) {
-  const res = await fetch(`./markdown_api.php/files/${encodeURIComponent(filename)}`);
+async function fetchFile(filename, password = null) {
+  let url = `./markdown_api.php/files/${encodeURIComponent(filename)}?share=1`;
+  if (password) {
+    url += `&password=${encodeURIComponent(password)}`;
+  }
+  const res = await fetch(url);
   const data = await res.json();
   if (!data.success) throw new Error(data.error || '加载失败');
   return data.data;
@@ -317,13 +321,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const pwd = prompt('该分享需要密码，请输入：');
             if (pwd !== null) {
                 try {
-                    const res = await fetch(`./markdown_api.php/files/${encodeURIComponent(file)}?password=${encodeURIComponent(pwd)}`);
-                    const data = await res.json();
-                    if (data && data.success) {
-                        renderMarkdown(data.data.content || '');
-                    } else {
-                        document.getElementById('docContent').innerHTML = `<div class=\"text-danger\">${data.error || '密码错误或访问被拒绝'}</div>`;
-                    }
+                    // 使用密码重新获取文件
+                    const result = await fetchFile(file, pwd);
+                    renderMarkdown(result.content || '');
                 } catch (err) {
                     document.getElementById('docContent').innerHTML = `<div class=\"text-danger\">加载失败：${err.message}</div>`;
                 }
@@ -336,5 +336,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
-

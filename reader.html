@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+image.png<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -718,7 +718,7 @@
             
         });
         
-        // 检查前端访问权限
+        // 检查前端访问权限（直接访问无需验证）
         async function checkFrontendAccess() {
             try {
                 const response = await fetch('./auth_api.php', {
@@ -732,13 +732,6 @@
                 });
                 
                 const result = await response.json();
-                
-                if (!result.success && result.require_login) {
-                    // 需要登录才能访问
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
                 console.log('前端访问权限检查通过');
             } catch (error) {
                 console.error('检查前端访问权限失败:', error);
@@ -1252,7 +1245,7 @@
         // 分享功能
         async function shareDocument(filename) {
             // 生成分享链接（使用独立分享页）
-            const shareUrl = `${window.location.origin}${window.location.pathname.replace('reader.html', 'share.html')}?file=${encodeURIComponent(filename)}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname.replace('reader.html', 'share.html')}?file=${encodeURIComponent(filename)}&share=1`;
             
             // 使用多种方法尝试复制到剪贴板
             let copySuccess = false;

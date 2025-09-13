@@ -87,18 +87,7 @@ function installSystem() {
         
         file_put_contents('markdown_files/欢迎使用.md', $sampleContent);
         
-        // 5. 创建数据库配置文件
-        $dbConfigContent = "<?php\n";
-        $dbConfigContent .= "// 数据库配置\n";
-        $dbConfigContent .= "\$db_config = [\n";
-        $dbConfigContent .= "    'host' => 'localhost',\n";
-        $dbConfigContent .= "    'dbname' => 'markdown_system',\n";
-        $dbConfigContent .= "    'username' => 'markdown_system',\n";
-        $dbConfigContent .= "    'password' => 'NirzkRjDZA8CcWw4',\n";
-        $dbConfigContent .= "    'charset' => 'utf8mb4'\n";
-        $dbConfigContent .= "];\n";
-        
-        file_put_contents('db_config.php', $dbConfigContent);
+        // 5. 数据库配置已通过环境变量管理，无需创建db_config.php
         
         // 6. 创建.htaccess文件（如果不存在）
         $htaccessContent = "# Markdown文档管理系统\n";

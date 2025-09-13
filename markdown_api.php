@@ -63,18 +63,28 @@ function sendSuccess($data = null, $message = '操作成功') {
 
 // 简单的分享密码校验（前端通过 ?token= 或 header 传递 password）
 function checkShareAccess(DatabaseConfig $db, $filename = null) {
-    // 文件锁检查
+    // 检查是否是分享链接访问
+    $isShare = isset($_GET['share']) || isset($_POST['share']);
+    
+    // 如果不是分享链接访问，直接返回true
+    if (!$isShare) {
+        return true;
+    }
+    
+    // 文件锁检查（仅针对分享链接）
     if ($filename) {
         $locked = $db->getLockedFiles();
         if (in_array($filename, $locked, true)) {
             sendError('该文件已被上锁，暂不允许外部访问', 403);
         }
     }
+    
     // 分享密码检查（为空表示不需要密码）
     $hash = $db->getSharePasswordHash();
     if (!$hash) {
         return true;
     }
+    
     $password = null;
     if (isset($_GET['password'])) $password = $_GET['password'];
     if (!$password && isset($_POST['password'])) {

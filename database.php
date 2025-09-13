@@ -4,6 +4,9 @@
  * 数据库连接和配置管理
  */
 
+// 加载环境变量
+require_once 'env.php';
+
 class DatabaseConfig {
     private $pdo;
     private $config;
@@ -14,22 +17,14 @@ class DatabaseConfig {
     }
     
     private function loadConfig() {
-        // 数据库配置
+        // 直接使用环境变量配置
         $this->config = [
-            'host' => 'localhost',
-            'dbname' => 'markdown_system',
-            'username' => 'markdown_system',
-            'password' => 'NirzkRjDZA8CcWw4',
-            'charset' => 'utf8mb4'
+            'host' => env('DB_HOST', 'localhost'),
+            'dbname' => env('DB_NAME', 'markdown_system'),
+            'username' => env('DB_USERNAME', 'markdown_system'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4')
         ];
-        
-        // 如果存在数据库配置文件，加载数据库配置
-        if (file_exists('db_config.php')) {
-            include 'db_config.php';
-            if (isset($db_config)) {
-                $this->config = array_merge($this->config, $db_config);
-            }
-        }
     }
     
     private function connect() {
@@ -203,18 +198,20 @@ class DatabaseConfig {
     private function getDefaultConfig() {
         return [
             'id' => 1,
-            'admin_username' => 'admin',
-            'admin_password_hash' => password_hash('Qwer123.', PASSWORD_DEFAULT),
-            'whitelist_ips' => ['180.74.191.129'],
-            'frontend_access' => 'public',
-            'session_timeout' => 3600,
+            'admin_username' => env('ADMIN_USERNAME', 'admin'),
+            'admin_password_hash' => password_hash(env('ADMIN_PASSWORD', 'Qwer123.'), PASSWORD_DEFAULT),
+            'whitelist_ips' => [env('DEFAULT_WHITELIST_IP', '180.74.191.129')],
+            'frontend_access' => env('FRONTEND_ACCESS', 'public'),
+            'session_timeout' => (int)env('SESSION_TIMEOUT', 3600),
             'system_settings' => [
-                'max_file_size' => 10485760,
-                'allowed_extensions' => ['md', 'txt'],
+                'max_file_size' => (int)env('MAX_FILE_SIZE', 10485760),
+                'allowed_extensions' => explode(',', env('ALLOWED_EXTENSIONS', 'md,txt')),
                 'backup_enabled' => true,
                 'auto_save_interval' => 30000,
                 'locked_files' => []
             ],
+            'share_password_hash' => env('SHARE_PASSWORD') ? password_hash(env('SHARE_PASSWORD'), PASSWORD_DEFAULT) : '',
+            'locked_files' => [],
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
         ];

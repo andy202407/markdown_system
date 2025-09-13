@@ -360,28 +360,14 @@ function handleUpdateFrontendAccess($input) {
 // 处理检查前端访问权限
 function handleCheckFrontendAccess() {
     try {
-        $db = getDB();
-        $config = $db->getSystemConfig();
-        
-        if ($config['frontend_access'] === 'private') {
-            // 需要登录才能访问前端
-            if (!isSessionValid()) {
-                echo json_encode([
-                    'success' => false, 
-                    'message' => '需要登录才能访问',
-                    'require_login' => true
-                ]);
-                exit;
-            }
-        }
-        
+        // 前端直接访问不需要验证，直接返回成功
         echo json_encode([
             'success' => true, 
-            'frontend_access' => $config['frontend_access'],
+            'frontend_access' => 'public',
             'require_login' => false
         ]);
-        
     } catch (Exception $e) {
+        http_response_code(500);
         echo json_encode([
             'success' => false, 
             'message' => '检查前端访问权限失败: ' . $e->getMessage(),
