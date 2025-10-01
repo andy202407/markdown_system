@@ -44,22 +44,28 @@ class DatabaseConfig {
         return $this->pdo;
     }
     
-    // 获取系统配置
+    // 获取系统配置（仅从数据库）。若不存在则写入默认配置后再读取
     public function getSystemConfig() {
         try {
             $stmt = $this->pdo->prepare("SELECT * FROM system_config WHERE id = 1");
             $stmt->execute();
             $config = $stmt->fetch();
-            
+
             if (!$config) {
-                // 如果配置不存在，返回默认配置
-                return $this->getDefaultConfig();
+                // 初始化到数据库，再次读取，保证只从数据库获取
+                $this->initDefaultConfig();
+                $stmt = $this->pdo->prepare("SELECT * FROM system_config WHERE id = 1");
+                $stmt->execute();
+                $config = $stmt->fetch();
+                if (!$config) {
+                    throw new Exception('系统配置缺失且初始化失败');
+                }
             }
-            
+
             // 解析JSON字段
             $config['whitelist_ips'] = json_decode($config['whitelist_ips'], true) ?: [];
             $config['system_settings'] = json_decode($config['system_settings'], true) ?: [];
-            
+
             return $config;
         } catch (Exception $e) {
             throw new Exception("获取系统配置失败: " . $e->getMessage());
@@ -196,11 +202,15 @@ class DatabaseConfig {
     
     // 获取默认配置
     private function getDefaultConfig() {
+        // 从环境变量获取默认白名单IP
+        $defaultWhitelistIPs = env('DEFAULT_WHITELIST_IP', '180.74.191.129,127.0.0.1');
+        $whitelistIPs = array_map('trim', explode(',', $defaultWhitelistIPs));
+        
         return [
             'id' => 1,
             'admin_username' => env('ADMIN_USERNAME', 'admin'),
             'admin_password_hash' => password_hash(env('ADMIN_PASSWORD', 'Qwer123.'), PASSWORD_DEFAULT),
-            'whitelist_ips' => [env('DEFAULT_WHITELIST_IP', '180.74.191.129')],
+            'whitelist_ips' => $whitelistIPs,
             'frontend_access' => env('FRONTEND_ACCESS', 'public'),
             'session_timeout' => (int)env('SESSION_TIMEOUT', 3600),
             'system_settings' => [
@@ -288,7 +298,7 @@ class DatabaseConfig {
             $this->log('info', '系统安装完成', [
                 'version' => '1.0.0',
                 'admin_username' => 'admin',
-                'ip_whitelist' => ['180.74.191.129'],
+                'ip_whitelist' => ['180.74.191.129', '127.0.0.1'],
                 'frontend_access' => 'public'
             ]);
             

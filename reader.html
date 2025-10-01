@@ -22,6 +22,9 @@ image.png<!DOCTYPE html>
             --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
             --radius: 10px;
             --content-max: 860px;
+            --toc-line: #cbd5e1; /* TOC 指引线颜色 */
+            --scrollbar-thumb: #c7cbd1;
+            --scrollbar-thumb-hover: #a8afb9;
         }
 
         [data-theme="dark"] {
@@ -32,6 +35,9 @@ image.png<!DOCTYPE html>
             --border: #243042;
             --shadow-sm: 0 2px 8px rgba(0,0,0,0.6);
             --shadow-md: 0 8px 24px rgba(0,0,0,0.5);
+            --toc-line: #475569; /* 深色主题下的指引线 */
+            --scrollbar-thumb: #475569;
+            --scrollbar-thumb-hover: #64748b;
         }
 
         html, body {
@@ -111,6 +117,16 @@ image.png<!DOCTYPE html>
             font-weight: 600;
             color: white;
         }
+        /* 提升目录头部按钮对比度 */
+        .toc-header .btn-outline-secondary {
+            color: rgba(255,255,255,0.95);
+            border-color: rgba(255,255,255,0.6);
+        }
+        .toc-header .btn-outline-secondary:hover {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border-color: rgba(255,255,255,0.85);
+        }
         
         .toc-list {
             padding: 10px 0;
@@ -128,18 +144,56 @@ image.png<!DOCTYPE html>
             border-left: 3px solid transparent;
             font-size: 13px;
             line-height: 1.4;
+            position: relative;
+            /* 长标题不换行，溢出省略 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 28px; /* 预留右侧箭头/图标空间，避免文字压住 */
         }
+        /* 层级缩进与标记点（左侧三角作为折叠/展开指示） */
+        .toc-item::before {
+            /* 默认不设定具体符号，由下面规则根据状态设置 */
+            content: '';
+            margin-right: 6px;
+            color: #94a3b8;
+            font-family: "Arial Unicode MS", sans-serif; /* 使用支持等宽Unicode字符的字体 */
+            font-size: 10px; /* 再次调小三角大小 */
+            display: inline-block;
+            width: 10px;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 10px;
+            height: 10px;
+        }
+        .toc-item.h1 { font-weight: 700; font-size: 14px; color: #334155; padding-left: 16px; margin-top: 6px; }
+        .toc-item.h1::before { content: ''; }
+        .toc-item.h2 { padding-left: 28px; color: #495057; }
+        .toc-item.h2::before { content: ''; color: #94a3b8; }
+        .toc-item.h3 { padding-left: 40px; color: #6b7280; }
+        .toc-item.h3::before { content: ''; color: #a8b0bb; }
+        .toc-item.h4 { padding-left: 52px; color: #8a93a2; }
+        .toc-item.h4::before { content: ''; color: #bec6cf; }
+        /* 叶子节点不显示左侧三角（放在最后以提高优先级） */
+        .toc-item.h2.leaf::before,
+        .toc-item.h3.leaf::before,
+        .toc-item.h4.leaf::before { content: ''; }
+        /* 非叶子：展开时左侧三角朝下，收起时朝右 */
+        .toc-item:not(.leaf)::before { content: '▼'; } /* 使用更大更清晰的Unicode三角 */
+        .toc-item.collapsed::before { content: '▶'; } /* 保持一致的大小和样式 */
+        /* 右侧箭头不再显示，避免与左侧指示重复 */
+        .toc-item:not(.leaf)::after {
+            content: '';
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 12px; opacity: .55; color: currentColor;
+        }
+        .toc-item.collapsed::after { content: ''; }
+        /* 顶级项间隔增强层次感 */
+        .toc-item.h1:not(:first-child) { border-top: 1px dashed rgba(0,0,0,0.06); padding-top: 10px; }
         
         .toc-item:hover {
-            background: #f5f7ff;
-            color: var(--brand-start);
-        }
-        
-        .toc-item.active {
-            background: linear-gradient(90deg, #e9f2ff 0%, #f8fbff 100%);
-            color: var(--brand-start);
-            border-left-color: var(--brand-start);
-            font-weight: 500;
+            background: rgba(243,244,246,0.4);
+            color: #4b5563;
         }
         
         .toc-item.h1 {
@@ -324,8 +378,8 @@ image.png<!DOCTYPE html>
             position: absolute;
             top: 60px;
             left: 296px;
-            right: 16px;
-            bottom: 16px;
+            right: 0;   /* 原 16px -> 0，让滚动条贴到最右侧 */
+            bottom: 0;  /* 原 16px -> 0，去掉底部留白 */
             background: var(--bg-elevated);
             border-radius: var(--radius);
             box-shadow: var(--shadow-md);
@@ -341,16 +395,19 @@ image.png<!DOCTYPE html>
         
         .markdown-content {
             flex: 1;
-            padding: 28px 32px 40px;
+            padding: 24px 0 28px; /* 水平内边距交由内层容器控制，确保左右一致 */
             overflow-y: auto;
-            max-width: var(--content-max);
-            margin: 0 auto;
+            max-width: none;  /* 原: var(--content-max) → 取消最大宽度限制 */
+            margin: 0;       /* 原: 0 auto → 去掉水平居中留白 */
             line-height: 1.85;
             width: 100%;
+            font-size: 14px; /* 原 15px → 14px */
         }
+        /* 新增：MD正文内层容器，扩大左侧留白 */
+        .markdown-content .md-doc { margin: 0 72px; }
         
         .markdown-content h1 {
-            font-size: 30px;
+            font-size: 26px; /* 原 30px */
             margin: 28px 0 18px;
             padding-bottom: 12px;
             border-bottom: 2px solid var(--brand-start);
@@ -358,13 +415,13 @@ image.png<!DOCTYPE html>
         }
         
         .markdown-content h2 {
-            font-size: 26px;
+            font-size: 22px; /* 原 26px */
             margin: 26px 0 14px;
             color: var(--text-primary);
         }
         
         .markdown-content h3 {
-            font-size: 20px;
+            font-size: 18px; /* 原 20px */
             margin: 20px 0 12px;
             color: var(--text-primary);
         }
@@ -458,31 +515,23 @@ image.png<!DOCTYPE html>
             color: white;
         }
         
-        /* 滚动条样式 */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        
+        /* 滚动条样式（主题感知） */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb {
-            background: #c7cbd1;
-            border-radius: 4px;
+            background: var(--scrollbar-thumb);
+            border: 2px solid transparent; /* 形成内间距，视觉更细 */
+            background-clip: padding-box;
+            border-radius: 8px;
         }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8afb9;
-        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 
         /* 阅读进度条 */
         .reading-progress {
             position: fixed;
             top: 60px;
             left: 296px;
-            right: 16px;
+            right: 0; /* 原 16px -> 0 与内容区域对齐 */
             height: 3px;
             background: rgba(102,126,234,.15);
             border-radius: 999px;
@@ -525,6 +574,17 @@ image.png<!DOCTYPE html>
             background: rgba(102,126,234,0.16);
             color: #dbe4ff;
         }
+        /* 分支高亮 - 深色主题 */
+        [data-theme="dark"] .toc-item.branch-active {
+            background: rgba(102,126,234,0.12);
+            color: #dbe4ff;
+        }
+        /* 深色主题下的层级配色/分隔 */
+        [data-theme="dark"] .toc-item.h1 { color: #e2e8f0; }
+        [data-theme="dark"] .toc-item.h2 { color: #cbd5e1; }
+        [data-theme="dark"] .toc-item.h3 { color: #a8b0bb; }
+        [data-theme="dark"] .toc-item.h4 { color: #94a3b8; }
+        [data-theme="dark"] .toc-item.h1:not(:first-child) { border-top-color: rgba(255,255,255,0.08); }
         [data-theme="dark"] .content-header {
             background: #0f172a;
         }
@@ -562,6 +622,14 @@ image.png<!DOCTYPE html>
         }
         [data-theme="dark"] .markdown-content table th {
             background: #121826;
+            color: var(--text-primary);
+        }
+        [data-theme="dark"] .markdown-content table td {
+            color: var(--text-primary);
+        }
+        [data-theme="dark"] .markdown-content table th,
+        [data-theme="dark"] .markdown-content table td {
+            border-color: #334155;
         }
         [data-theme="dark"] .reading-progress {
             background: rgba(102,126,234,0.22);
@@ -655,9 +723,15 @@ image.png<!DOCTYPE html>
                 <h6>
                     <i class="fas fa-list me-2"></i>目录导航
                 </h6>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" id="tocExpandToggle">
+                        <i class="fas fa-compress"></i> 收起
+                    </button>
+                    
                 <button class="btn btn-sm btn-outline-secondary" id="tocClose">
                     <i class="fas fa-times"></i>
                 </button>
+                </div>
             </div>
             <div class="toc-list" id="tocList">
                 <!-- 目录将通过JavaScript动态生成 -->
@@ -679,10 +753,12 @@ image.png<!DOCTYPE html>
             </div>
             
             <div class="markdown-content" id="markdownContent">
-                <div class="empty-state">
-                    <i class="fas fa-book-open"></i>
-                    <h4>欢迎使用Markdown阅读器</h4>
-                    <p>请从左侧选择一个文档开始阅读</p>
+                <div class="md-doc" id="mdDoc">
+                    <div class="empty-state">
+                        <i class="fas fa-book-open"></i>
+                        <h4>欢迎使用Markdown阅读器</h4>
+                        <p>请从左侧选择一个文档开始阅读</p>
+                    </div>
                 </div>
             </div>
             <button class="btn btn-primary btn-sm" id="backToTopBtn" style="position:absolute; right:24px; bottom:24px; display:none; box-shadow: var(--shadow-sm); border-radius: 999px;">
@@ -707,9 +783,57 @@ image.png<!DOCTYPE html>
         const API_URL = './markdown_api.php';
         let isDark = false;
         
+        // 阅读状态缓存
+        let readingCache = {
+            lastFile: null,
+            lastPosition: null,
+            lastHash: null
+        };
+        
+        // 缓存管理函数
+        function saveReadingState() {
+            if (currentFile) {
+                const markdownContent = document.getElementById('markdownContent');
+                readingCache.lastFile = currentFile;
+                readingCache.lastPosition = markdownContent ? markdownContent.scrollTop : 0;
+                readingCache.lastHash = window.location.hash;
+                
+                // 保存到localStorage
+                try {
+                    localStorage.setItem('readingCache', JSON.stringify(readingCache));
+                } catch (e) {
+                    console.warn('无法保存阅读状态到localStorage:', e);
+                }
+            }
+        }
+        
+        function loadReadingState() {
+            try {
+                const saved = localStorage.getItem('readingCache');
+                if (saved) {
+                    readingCache = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.warn('无法从localStorage加载阅读状态:', e);
+                readingCache = { lastFile: null, lastPosition: null, lastHash: null };
+            }
+        }
+        
+        function clearReadingState() {
+            readingCache = { lastFile: null, lastPosition: null, lastHash: null };
+            try {
+                localStorage.removeItem('readingCache');
+            } catch (e) {
+                console.warn('无法清除localStorage:', e);
+            }
+        }
+        
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM加载完成，开始初始化...');
+            
+            // 先加载阅读状态缓存
+            loadReadingState();
             
             // 检查前端访问权限
             checkFrontendAccess();
@@ -768,7 +892,16 @@ image.png<!DOCTYPE html>
             
             // 键盘快捷键
             document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && e.key === 'f') {
+                // 不再拦截 Ctrl+F，保留浏览器原生查找
+                // 使用 Ctrl+K（或 Cmd+K）聚焦左侧搜索框
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+                // 也支持按 '/' 快速聚焦（在未输入文本时）
+                if (!e.ctrlKey && !e.metaKey && e.key === '/' &&
+                    document.activeElement.tagName !== 'INPUT' &&
+                    document.activeElement.tagName !== 'TEXTAREA') {
                     e.preventDefault();
                     document.getElementById('searchInput').focus();
                 }
@@ -822,11 +955,25 @@ image.png<!DOCTYPE html>
                 renderFileTree();
                 updateFileCount();
                 
-                // 如果URL中有文件名参数，自动打开该文件
+                // 智能文件加载逻辑
                 const urlParams = new URLSearchParams(window.location.search);
-                const filename = urlParams.get('file');
-                if (filename && files[filename]) {
-                    openFile(filename);
+                const urlFile = urlParams.get('file');
+                
+                if (urlFile && files[urlFile]) {
+                    // URL中有指定文件，优先打开
+                    console.log('从URL打开文件:', urlFile);
+                    await openFile(urlFile);
+                } else if (readingCache.lastFile && files[readingCache.lastFile]) {
+                    // 恢复上次阅读的文件
+                    console.log('恢复上次阅读的文件:', readingCache.lastFile);
+                    await openFile(readingCache.lastFile);
+                } else {
+                    // 默认打开第一个文件
+                    const firstFile = Object.keys(files).sort()[0];
+                    if (firstFile) {
+                        console.log('默认打开第一个文件:', firstFile);
+                        await openFile(firstFile);
+                    }
                 }
             } catch (error) {
                 console.error('加载文件列表失败:', error);
@@ -886,7 +1033,7 @@ image.png<!DOCTYPE html>
                 // 渲染Markdown内容
                 const html = marked.parse(file.content);
                 const cleanHtml = DOMPurify.sanitize(html);
-                document.getElementById('markdownContent').innerHTML = cleanHtml;
+                document.getElementById('mdDoc').innerHTML = cleanHtml;
                 // 代码高亮
                 document.querySelectorAll('#markdownContent pre code').forEach(block => {
                     hljs.highlightElement(block);
@@ -897,6 +1044,16 @@ image.png<!DOCTYPE html>
                 
                 // 默认展开目录
                 showToc();
+                
+                // 延迟恢复滚动位置，确保内容完全渲染
+                setTimeout(() => {
+                    // 优先使用缓存的位置恢复
+                    if (readingCache.lastFile === filename && readingCache.lastPosition !== null) {
+                        restoreFromCache();
+                    } else {
+                        restoreScrollPosition();
+                    }
+                }, 200);
                 
                 // 添加滚动监听
                 addScrollListener();
@@ -915,9 +1072,9 @@ image.png<!DOCTYPE html>
                     }
                 });
                 
-                // 滚动到顶部
-                const contentBody = document.querySelector('.content-body');
-                contentBody.scrollTop = 0;
+                // 滚动到内容顶部
+                const container = document.getElementById('markdownContent');
+                container.scrollTop = 0;
                 
                 // 确保内容区域可以滚动
                 setTimeout(() => {
@@ -993,7 +1150,7 @@ image.png<!DOCTYPE html>
             }
             
             const printWindow = window.open('', '_blank');
-            const content = document.getElementById('markdownContent').innerHTML;
+            const content = document.getElementById('mdDoc').innerHTML;
             
             printWindow.document.write(`
                 <!DOCTYPE html>
@@ -1049,7 +1206,7 @@ image.png<!DOCTYPE html>
         
         // 显示错误信息
         function showError(message) {
-            const content = document.getElementById('markdownContent');
+            const content = document.getElementById('mdDoc');
             content.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-exclamation-circle text-danger"></i>
@@ -1076,6 +1233,9 @@ image.png<!DOCTYPE html>
                 return;
             }
             
+            // 记录目录项（用于折叠/展开逻辑）
+            window.__tocItems = [];
+
             headings.forEach((heading, index) => {
                 // 为标题添加ID
                 const id = `heading-${index}`;
@@ -1087,22 +1247,68 @@ image.png<!DOCTYPE html>
                 tocItem.className = `toc-item ${heading.tagName.toLowerCase()}`;
                 tocItem.textContent = heading.textContent.trim();
                 
-                // 点击跳转
+                // 检查文本是否被截断，只有被截断时才添加 title 提示
+                setTimeout(() => {
+                    if (tocItem.scrollWidth > tocItem.clientWidth) {
+                        tocItem.title = heading.textContent.trim();
+                    }
+                }, 0);
+                
+                // 点击跳转（仅滚动右侧内容容器，避免窗口位置改变）
                 tocItem.addEventListener('click', function(e) {
                     e.preventDefault();
-                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    // 滚动到目标位置
+                    const container = document.getElementById('markdownContent');
+                    const targetTop = heading.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+                    container.scrollTo({ top: targetTop, behavior: 'smooth' });
                     
-                    // 更新活动状态
-                    document.querySelectorAll('.toc-item').forEach(item => {
-                        item.classList.remove('active');
-                    });
-                    this.classList.add('active');
+                    const idx = window.__tocItems.findIndex(i => i.el === this);
+
+                    // 折叠/展开逻辑（点击当前项只影响当前分支，不影响顶级分支）
+                    const topLevel = getTopLevel();
+                    const level = window.__tocItems[idx].level;
+                    const hasChildren = !this.classList.contains('leaf');
+                    
+                    if (window.__tocExpanded && hasChildren) {
+                        // 展开模式：点击有子项的条目 => 切换当前分支的收起/展开
+                        if (isBranchCollapsed(idx)) {
+                            expandBranch(idx);
+                        } else {
+                            collapseBranch(idx);
+                        }
+                    } else if (!window.__tocExpanded && level === topLevel) {
+                        // 收起模式：点击顶级 => 展开该分支
+                        const topIdx = findTopIndex(idx);
+                        openTocBranch(topIdx);
+                    }
                 });
                 
                 tocList.appendChild(tocItem);
+
+                // 保存层级信息
+                const level = parseInt(heading.tagName.substring(1), 10);
+                window.__tocItems.push({ el: tocItem, level });
             });
             
             console.log(`生成了 ${headings.length} 个目录项`);
+
+            // 初始化目录模式（默认展开）
+            if (typeof window.__tocExpanded === 'undefined') {
+                window.__tocExpanded = true;
+            }
+            // 初始化收起集合
+            if (!window.__collapsedBranches) {
+                window.__collapsedBranches = new Set();
+            }
+            // 标记各层级最后一项，用于收尾线条
+            markTocLastItems();
+            // 标记叶子节点，用于隐藏左侧三角
+            markTocLeaves();
+            applyTocMode();
+            
+            // 初始化滚动高亮功能
+            initScrollHighlight();
         }
         
         // 切换目录显示
@@ -1159,16 +1365,7 @@ image.png<!DOCTYPE html>
                     }
                 });
                 
-                // 更新目录高亮（忽略空格和井号差异）
-                document.querySelectorAll('.toc-item').forEach(item => {
-                    item.classList.remove('active');
-                    if (
-                        currentHeading &&
-                        item.textContent.trim().replace(/[#\s]/g,'') === currentHeading.textContent.trim().replace(/[#\s]/g,'')
-                    ) {
-                        item.classList.add('active');
-                    }
-                });
+                // 移除自动目录高亮功能
 
                 // 显示/隐藏返回顶部
                 const topBtn = document.getElementById('backToTopBtn');
@@ -1213,6 +1410,308 @@ image.png<!DOCTYPE html>
                 document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon me-1"></i>深色';
                 document.getElementById('hljsThemeLight').disabled = false;
                 document.getElementById('hljsThemeDark').disabled = true;
+            }
+        }
+
+        // ===== 目录展开/收起 =====
+        function getTopLevel() {
+            const items = window.__tocItems || [];
+            if (!items.length) return 1;
+            return items.reduce((min, i) => Math.min(min, i.level), 6);
+        }
+
+        // 计算每个层级的最后一个项，加样式以截断竖线
+        function markTocLastItems() {
+            const items = window.__tocItems || [];
+            const top = getTopLevel();
+            // 先清理
+            items.forEach(i => {
+                i.el.classList.remove('last-l2', 'last-l3', 'last-l4', 'last-l5', 'last-l6');
+            });
+            for (let i = 0; i < items.length; i++) {
+                const level = items[i].level;
+                if (level <= top) continue; // 顶级不需要
+                const next = items[i + 1];
+                if (!next || next.level <= level) {
+                    // 当前项是该层级的最后一个
+                    items[i].el.classList.add('last-l' + level);
+                }
+            }
+        }
+
+        // 标记叶子节点（无任何子级）
+        function markTocLeaves() {
+            const items = window.__tocItems || [];
+            if (!items.length) return;
+            // 重置
+            items.forEach(i => i.el.classList.remove('leaf'));
+            for (let i = 0; i < items.length; i++) {
+                const currentLevel = items[i].level;
+                let hasChildren = false;
+                // 向后查找，直到找到同级或更高级的项，期间如果有更深层级的项就说明有子级
+                for (let j = i + 1; j < items.length; j++) {
+                    if (items[j].level <= currentLevel) break;
+                    if (items[j].level > currentLevel) {
+                        hasChildren = true;
+                        break;
+                    }
+                }
+                if (!hasChildren) {
+                    items[i].el.classList.add('leaf');
+                }
+            }
+        }
+
+        // 找到某个目录项所属的顶级索引
+        function findTopIndex(index) {
+            const items = window.__tocItems || [];
+            const top = getTopLevel();
+            for (let i = index; i >= 0; i--) {
+                if (items[i].level === top) return i;
+            }
+            return 0;
+        }
+
+        // 移除不再使用的分支高亮函数
+
+        // 收起/展开集合管理
+        function isBranchCollapsed(topIndex) {
+            return window.__collapsedBranches && window.__collapsedBranches.has(topIndex);
+        }
+        function collapseBranch(topIndex) {
+            if (!window.__collapsedBranches) window.__collapsedBranches = new Set();
+            window.__collapsedBranches.add(topIndex);
+            hideDescendantsOfTop(topIndex, true);
+            const items = window.__tocItems || [];
+            if (items[topIndex]) items[topIndex].el.classList.add('collapsed');
+        }
+        function expandBranch(topIndex) {
+            if (!window.__collapsedBranches) window.__collapsedBranches = new Set();
+            window.__collapsedBranches.delete(topIndex);
+            hideDescendantsOfTop(topIndex, false);
+            const items = window.__tocItems || [];
+            if (items[topIndex]) items[topIndex].el.classList.remove('collapsed');
+        }
+        function hideDescendantsOfTop(parentIndex, hidden) {
+            const items = window.__tocItems || [];
+            const parentLevel = items[parentIndex].level;
+            for (let i = parentIndex + 1; i < items.length; i++) {
+                if (items[i].level <= parentLevel) break;
+                items[i].el.style.display = hidden ? 'none' : '';
+            }
+        }
+        function applyCollapsedBranches() {
+            const items = window.__tocItems || [];
+            const top = getTopLevel();
+            if (!window.__collapsedBranches) window.__collapsedBranches = new Set();
+            // 清除状态
+            items.forEach(i => { if (i.level === top) i.el.classList.remove('collapsed'); });
+            // 确保顶级可见
+            items.forEach(i => { if (i.level === top) i.el.style.display = ''; });
+            // 先全部展开
+            items.forEach(i => { if (i.level !== top) i.el.style.display = ''; });
+            // 隐藏被收起的分支并标记折叠
+            [...window.__collapsedBranches].forEach(idx => {
+                hideDescendantsOfTop(idx, true);
+                if (items[idx]) items[idx].el.classList.add('collapsed');
+            });
+        }
+
+        function applyTocMode() {
+            const items = window.__tocItems || [];
+            const topLevel = getTopLevel();
+            if (window.__tocExpanded) {
+                // 展开：强制显示所有项
+                items.forEach(i => {
+                    i.el.style.display = '';
+                    i.el.classList.remove('collapsed');
+                });
+                // 清空所有收起状态
+                if (window.__collapsedBranches) {
+                    window.__collapsedBranches.clear();
+                }
+                markTocLastItems();
+                markTocLeaves();
+                const btn = document.getElementById('tocExpandToggle');
+                if (btn) btn.innerHTML = '<i class="fas fa-compress"></i> 收起全部';
+            } else {
+                // 收起：只显示最顶级
+                items.forEach(i => {
+                    i.el.style.display = i.level === topLevel ? '' : 'none';
+                    if (i.level === topLevel) i.el.classList.add('collapsed');
+                });
+                // 更新收起状态集合：将所有顶级项目标记为收起
+                if (!window.__collapsedBranches) window.__collapsedBranches = new Set();
+                window.__collapsedBranches.clear();
+                items.forEach((item, index) => {
+                    if (item.level === topLevel) {
+                        window.__collapsedBranches.add(index);
+                    }
+                });
+                const btn = document.getElementById('tocExpandToggle');
+                if (btn) btn.innerHTML = '<i class="fas fa-expand"></i> 展开全部';
+            }
+        }
+
+        function openTocBranch(topIndex) {
+            const items = window.__tocItems || [];
+            if (!items.length) return;
+            const topLevel = getTopLevel();
+            // 先收起其它分支，仅保留所有顶级可见
+            items.forEach(i => { i.el.style.display = (i.level === topLevel) ? '' : 'none'; });
+            // 展开当前分支（直到下一个顶级）
+            for (let i = topIndex + 1; i < items.length; i++) {
+                if (items[i].level === topLevel) break;
+                items[i].el.style.display = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('tocExpandToggle');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    window.__tocExpanded = !window.__tocExpanded;
+                    applyTocMode();
+                });
+            }
+        });
+        
+        // 滚动时高亮当前章节
+        function highlightCurrentSection() {
+            const markdownContent = document.getElementById('markdownContent');
+            const tocItems = window.__tocItems || [];
+            
+            if (!markdownContent || !tocItems.length) return;
+            
+            const headings = markdownContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            const scrollTop = markdownContent.scrollTop;
+            
+            // 清除所有高亮
+            tocItems.forEach(item => {
+                item.el.classList.remove('active');
+            });
+            
+            // 找到当前可见的标题
+            let currentIndex = -1;
+            
+            for (let i = 0; i < headings.length; i++) {
+                const heading = headings[i];
+                const headingTop = heading.offsetTop;
+                
+                // 如果标题在视口内，或者是最接近视口顶部的标题
+                if (headingTop <= scrollTop + 100) { // 100px 的偏移量，提前高亮
+                    currentIndex = i;
+                } else {
+                    break;
+                }
+            }
+            
+            // 高亮当前章节
+            if (currentIndex >= 0 && tocItems[currentIndex]) {
+                tocItems[currentIndex].el.classList.add('active');
+                
+                // 更新URL hash以保存当前位置
+                const heading = headings[currentIndex];
+                if (heading && heading.id) {
+                    const newHash = `#${heading.id}`;
+                    if (window.location.hash !== newHash) {
+                        window.history.replaceState(null, null, newHash);
+                    }
+                }
+                
+                // 确保当前项在目录中可见
+                const activeItem = tocItems[currentIndex].el;
+                
+                if (activeItem && activeItem.offsetParent) { // 检查元素是否可见
+                    activeItem.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest'
+                    });
+                }
+            }
+        }
+        
+        // 从缓存恢复滚动位置
+        function restoreFromCache() {
+            const markdownContent = document.getElementById('markdownContent');
+            if (!markdownContent) return;
+            
+            setTimeout(() => {
+                if (readingCache.lastPosition !== null) {
+                    markdownContent.scrollTo({
+                        top: readingCache.lastPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    // 触发高亮更新
+                    setTimeout(() => {
+                        highlightCurrentSection();
+                    }, 300);
+                }
+                
+                // 清除缓存，避免重复使用
+                readingCache.lastPosition = null;
+            }, 100);
+        }
+        
+        // 恢复滚动位置和高亮
+        function restoreScrollPosition() {
+            const hash = window.location.hash;
+            if (!hash) return;
+            
+            const markdownContent = document.getElementById('markdownContent');
+            if (!markdownContent) return;
+            
+            // 等待内容加载完成
+            setTimeout(() => {
+                const targetElement = document.querySelector(hash);
+                if (targetElement) {
+                    const targetTop = targetElement.offsetTop;
+                    markdownContent.scrollTo({
+                        top: targetTop - 50, // 50px 的偏移量，让标题稍微靠上
+                        behavior: 'smooth'
+                    });
+                    
+                    // 触发高亮更新
+                    setTimeout(() => {
+                        highlightCurrentSection();
+                    }, 300);
+                } else {
+                    // 如果目标元素还没找到，再等待一下
+                    setTimeout(() => {
+                        const targetElement = document.querySelector(hash);
+                        if (targetElement) {
+                            const targetTop = targetElement.offsetTop;
+                            markdownContent.scrollTo({
+                                top: targetTop - 50,
+                                behavior: 'smooth'
+                            });
+                            setTimeout(() => {
+                                highlightCurrentSection();
+                            }, 300);
+                        }
+                    }, 100);
+                }
+            }, 100);
+        }
+        
+        // 添加滚动监听
+        function initScrollHighlight() {
+            const markdownContent = document.getElementById('markdownContent');
+            if (markdownContent) {
+                // 使用节流函数避免频繁触发
+                let ticking = false;
+                markdownContent.addEventListener('scroll', function() {
+                    if (!ticking) {
+                        requestAnimationFrame(function() {
+                            highlightCurrentSection();
+                            // 自动保存阅读状态
+                            saveReadingState();
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                });
             }
         }
         

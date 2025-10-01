@@ -6,6 +6,21 @@
 
 require_once 'database.php';
 
+// 如果带有 force=1 参数，则静默执行一次初始化，但不输出纯文本，仍渲染下方HTML
+$__autoInstall = isset($_GET['force']);
+$__autoInstallMsg = '';
+if ($__autoInstall) {
+    try {
+        $db = getDB();
+        $db->createTables();
+        $db->initDefaultConfig();
+        $cfg = $db->getSystemConfig();
+        $__autoInstallMsg = 'success';
+    } catch (Exception $e) {
+        $__autoInstallMsg = 'error:' . $e->getMessage();
+    }
+}
+
 // 检查是否已安装（检查数据库表是否存在）
 try {
     $db = getDB();
@@ -33,7 +48,7 @@ ini_set('display_errors', 1);
 $config = [
     'admin_username' => 'admin',
     'admin_password' => 'Qwer123.',
-    'whitelist_ips' => ['180.74.191.129'],
+    'whitelist_ips' => ['180.74.191.129', '127.0.0.1'],
     'frontend_access' => 'public', // public: 公开访问, private: 需要登录
     'session_timeout' => 3600,
     'install_time' => time()
@@ -308,6 +323,25 @@ $config = [
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // 如果通过 force=1 触发了自动安装，这里给出提示
+        const AUTO_INSTALL_MSG = '<?php echo addslashes($__autoInstallMsg); ?>';
+        if (AUTO_INSTALL_MSG) {
+            if (AUTO_INSTALL_MSG === 'success') {
+                setTimeout(() => {
+                    const ok = document.createElement('div');
+                    ok.className = 'alert alert-success';
+                    ok.textContent = 'Install OK：配置已写入数据库。';
+                    document.getElementById('alertContainer').appendChild(ok);
+                }, 50);
+            } else if (AUTO_INSTALL_MSG.startsWith('error:')) {
+                setTimeout(() => {
+                    const er = document.createElement('div');
+                    er.className = 'alert alert-danger';
+                    er.textContent = '安装失败：' + AUTO_INSTALL_MSG.substring(6);
+                    document.getElementById('alertContainer').appendChild(er);
+                }, 50);
+            }
+        }
         function showAlert(type, message) {
             const alertContainer = document.getElementById('alertContainer');
             alertContainer.innerHTML = `

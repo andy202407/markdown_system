@@ -111,6 +111,16 @@ function hashPassword($password) {
 
 // 检查IP白名单
 function checkIPWhitelist($ip, $whitelist) {
+    // 首先检查环境变量中的默认白名单IP
+    $defaultWhitelistIPs = env('DEFAULT_WHITELIST_IP', '');
+    if (!empty($defaultWhitelistIPs)) {
+        $defaultIPs = array_map('trim', explode(',', $defaultWhitelistIPs));
+        if (in_array($ip, $defaultIPs)) {
+            return true;
+        }
+    }
+    
+    // 然后检查数据库中的白名单
     return in_array($ip, $whitelist);
 }
 

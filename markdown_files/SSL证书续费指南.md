@@ -1,5 +1,3 @@
-# 🔐 SSL证书续费指南
-
 ## 📋 快速导航
 - [🛠️ Nginx管理](#nginx管理)
 - [🔍 证书查询](#证书查询)
@@ -69,21 +67,7 @@ sudo certbot certonly --manual -d api.qialiaokefu.com
    - 在文件管理器中导航到路径: `/usr/local/nginx/conf/vhost/`
    - 找到并编辑文件: `api.qialiaokefu.com.conf`
 
-3. **取消注释并修改配置**
-   - 找到以下注释部分并取消注释（删除 `#` 号）：
-   ```nginx
-   location / {
-       root /usr/local/nginx/html;
-       index index.html index.htm;
-       # 如果 /.well-known/acme-challenge/ 是静态文件目录的一部分，可以在此处理
-       location /.well-known/acme-challenge/ {
-           default_type "text/plain";
-           allow all;  
-       }
-   }
-   ```
-
-4. **保存文件并重启Nginx**
+3. **保存文件并重启Nginx**
    - 在Web界面中点击保存按钮
    - **按 `Alt + K` 验证配置并重启Nginx**
    ```bash
@@ -96,7 +80,7 @@ sudo certbot certonly --manual -d api.qialiaokefu.com
 
 #### 步骤3: Web界面创建验证文件
 
-5. **根据SSL续费指令提示创建验证文件**
+4. **根据SSL续费指令提示创建验证文件**
    - 系统会显示类似以下提示：
    ```
    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -109,7 +93,7 @@ sudo certbot certonly --manual -d api.qialiaokefu.com
    http://api.qialiaokefu.com/.well-known/acme-challenge/2iDo5YYUgez2GsaFfSQsCojtLBimlgFmkfSpXLVZhnI
    ```
 
-6. **使用Alt+K创建验证文件**
+5. **使用Alt+K创建验证文件**
    - 在Web界面中按 `Alt + K`
    - 使用指令创建新文件并保存内容：
    ```bash
@@ -117,37 +101,10 @@ sudo certbot certonly --manual -d api.qialiaokefu.com
    ```
    - 执行指令创建新文件并保存内容
 
-7. **确认续费**
+6. **确认续费**
    - 回到Termius终端的续费命令窗口
    - 按 `Enter` 确认继续
    - 等待证书续费完成
-
-#### 步骤4: 完成续费（可选：保留验证路径配置）
-
-8. **续费完成**
-   - 证书续费成功后，验证路径配置可以保留
-   - **建议保留原因**：
-     - 不影响其他访问，只匹配 `/.well-known/acme-challenge/` 路径
-     - 方便下次续费，无需重新取消注释
-     - 符合Let's Encrypt标准做法
-     - 配置轻量，不影响性能
-
-9. **如需注释配置**（可选操作）
-   - 重新编辑文件: `api.qialiaokefu.com.conf`
-   - 将验证路径配置重新注释：
-   ```nginx
-   location / {
-       root /usr/local/nginx/html;
-       index index.html index.htm;
-       # 如果 /.well-known/acme-challenge/ 是静态文件目录的一部分，可以在此处理
-       # location /.well-known/acme-challenge/ {
-       #     default_type "text/plain";
-       #     allow all;  
-       # }
-   }
-   ```
-   - 保存文件并按 `Alt + K` 验证配置并重启Nginx
-
 ---
 
 ### 🖥️ CMS服务器证书 (cms.qialiaokefu.com)
@@ -178,17 +135,7 @@ sudo certbot certonly --manual -d cms.qialiaokefu.com
    - 进入路径: `/usr/local/nginx/conf/vhost/`
    - 找到并编辑文件: `cms.qialiaokefu.com.conf`
 
-3. **取消注释并修改配置**
-   - 找到以下注释部分并取消注释（删除 `#` 号）：
-   ```nginx
-        # 如果 /.well-known/acme-challenge/ 是静态文件目录的一部分，可以在此处理
-        # location /.well-known/acme-challenge/ {
-        #     default_type "text/plain";
-        #     allow all;
-        # }
-   ```
-
-4. **保存文件并重启Nginx**
+3. **保存文件并重启Nginx**
    - 在Web界面中点击保存按钮
    - **按 `Alt + K` 验证配置并重启Nginx**
    ```bash
@@ -201,7 +148,7 @@ sudo certbot certonly --manual -d cms.qialiaokefu.com
 
 #### 步骤3: Web界面创建验证文件
 
-5. **根据SSL续费指令提示创建验证文件**
+4. **根据SSL续费指令提示创建验证文件**
    - 系统会显示类似以下提示：
    ```
    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -214,7 +161,7 @@ sudo certbot certonly --manual -d cms.qialiaokefu.com
    http://cms.qialiaokefu.com/.well-known/acme-challenge/2iDo5YYUgez2GsaFfSQsCojtLBimlgFmkfSpXLVZhnI
    ```
 
-6. **使用Alt+K创建验证文件**
+5. **使用Alt+K创建验证文件**
    - 在Web界面中按 `Alt + K`
    - 使用指令创建新文件并保存内容：
    ```bash
@@ -222,36 +169,10 @@ sudo certbot certonly --manual -d cms.qialiaokefu.com
    ```
    - 执行指令创建新文件并保存内容
 
-7. **确认续费**
+6. **确认续费**
    - 回到Termius终端的续费命令窗口
    - 按 `Enter` 确认继续
    - 等待证书续费完成
-
-#### 步骤4: Web界面恢复配置
-
-9. **切换到Web管理界面**
-   - 重新编辑文件: `cms.qialiaokefu.com.conf`
-
-9. **重新注释配置文件**
-    - 将之前取消注释的配置重新注释（添加 `#` 号）：
-    ```nginx
-        # 如果 /.well-known/acme-challenge/ 是静态文件目录的一部分，可以在此处理
-        # location /.well-known/acme-challenge/ {
-        #     default_type "text/plain";
-        #     allow all;
-        # }
-    ```
-
-10. **保存文件并重启Nginx**
-    - 在Web界面中点击保存按钮
-    - **按 `Alt + K` 验证配置并重启Nginx**
-    ```bash
-    # 验证配置文件
-    sudo /usr/local/nginx/sbin/nginx -t
-    
-    # 重启Nginx
-    sudo /usr/local/nginx/sbin/nginx -s reload
-    ```
 
 ---
 
@@ -283,30 +204,9 @@ sudo certbot certonly --manual -d ws.qialiaokefu.com
    - 进入路径: `/usr/local/nginx/conf/vhost/`
    - 找到并编辑文件: `ws.qialiaokefu.com.conf`
 
-3. **取消注释并修改配置**
-   - 找到以下注释部分并取消注释（删除 `#` 号）：
-   ```nginx
-    #location /.well-known/acme-challenge/ {
-            #root /usr/local/nginx/html;
-            #default_type "text/plain";
-            #allow all;
-        #}
-   ```
-
-4. **保存文件并重启Nginx**
-   - 在Web界面中点击保存按钮
-   - **按 `Alt + K` 验证配置并重启Nginx**
-   ```bash
-   # 验证配置文件
-   sudo /usr/local/nginx/sbin/nginx -t
-   
-   # 重启Nginx
-   sudo /usr/local/nginx/sbin/nginx -s reload
-   ```
-
 #### 步骤3: Web界面创建验证文件
 
-5. **根据SSL续费指令提示创建验证文件**
+3. **根据SSL续费指令提示创建验证文件**
    - 系统会显示类似以下提示：
    ```
    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -319,7 +219,7 @@ sudo certbot certonly --manual -d ws.qialiaokefu.com
    http://ws.qialiaokefu.com/.well-known/acme-challenge/2iDo5YYUgez2GsaFfSQsCojtLBimlgFmkfSpXLVZhnI
    ```
 
-6. **使用Alt+K创建验证文件**
+4. **使用Alt+K创建验证文件**
    - 在Web界面中按 `Alt + K`
    - 使用指令创建新文件并保存内容：
    ```bash
@@ -327,37 +227,9 @@ sudo certbot certonly --manual -d ws.qialiaokefu.com
    ```
    - 执行指令创建新文件并保存内容
 
-7. **确认续费**
+5. **确认续费**
    - 回到Termius终端的续费命令窗口
    - 按 `Enter` 确认继续
-   - 等待证书续费完成
-
-#### 步骤4: Web界面恢复配置
-
-9. **切换到Web管理界面**
-   - 重新编辑文件: `ws.qialiaokefu.com.conf`
-
-9. **重新注释配置文件**
-    - 将之前取消注释的配置重新注释（添加 `#` 号）：
-    ```nginx
-        #location /.well-known/acme-challenge/ {
-                #root /usr/local/nginx/html;
-                #default_type "text/plain";
-                #allow all;
-            #}
-    ```
-
-10. **保存文件并重启Nginx**
-    - 在Web界面中点击保存按钮
-    - **按 `Alt + K` 验证配置并重启Nginx**
-    ```bash
-    # 验证配置文件
-    sudo /usr/local/nginx/sbin/nginx -t
-    
-    # 重启Nginx
-    sudo /usr/local/nginx/sbin/nginx -s reload
-    ```
-
 ---
 
 ## 🚀 快速操作指南

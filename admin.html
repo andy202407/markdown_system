@@ -209,11 +209,13 @@
             border: 1px solid #dee2e6;
             padding: 8px 12px;
             text-align: left;
+            color: #333333;
         }
         
         .preview-content table th {
             background: #f8f9fa;
             font-weight: 600;
+            color: #212529;
         }
         
         .empty-state {
@@ -721,6 +723,25 @@
                 updatePreview();
             });
             
+            // 左侧滚动 -> 右侧预览跟随
+            let syncingPreview = false;
+            markdownEditor.on('scroll', function() {
+                if (syncingPreview) return;
+                const info = markdownEditor.getScrollInfo();
+                const maxEditorScroll = Math.max(1, info.height - info.clientHeight);
+                const ratio = Math.min(1, Math.max(0, info.top / maxEditorScroll));
+                const previewPanel = document.querySelector('.preview-panel');
+                if (!previewPanel) return;
+                const maxPreviewScroll = Math.max(0, previewPanel.scrollHeight - previewPanel.clientHeight);
+                const target = maxPreviewScroll * ratio;
+                syncingPreview = true;
+                // 使用 rAF 提升流畅度
+                window.requestAnimationFrame(() => {
+                    previewPanel.scrollTop = target;
+                    syncingPreview = false;
+                });
+            });
+            
             console.log('编辑器初始化完成');
         }
         
@@ -879,27 +900,50 @@
             console.log(`渲染了 ${Object.keys(files).length} 个文件`);
         }
         
-        // 打开文件
-        function openFile(filename, itemEl) {
+        // 打开文件（从服务端获取内容，避免列表数据缺少content导致无法编辑）
+        async function openFile(filename, itemEl) {
             console.log('打开文件:', filename);
             currentFile = filename;
-            const file = files[filename];
-            
-            // 更新UI
+
+            // 更新UI选中态
             document.querySelectorAll('.file-item').forEach(item => {
                 item.classList.remove('active');
             });
             if (itemEl) {
                 itemEl.classList.add('active');
             }
-            
+
+            // 标题
             document.getElementById('currentFileName').innerHTML = `
                 <i class="fas fa-file-alt me-2"></i>${filename}
             `;
-            
-            markdownEditor.setValue(file.content);
+
+            // 从API加载最新内容与锁定状态
+            let file = files[filename] || {};
+            try {
+                const resp = await apiCall('GET', `/files/${encodeURIComponent(filename)}`);
+                file = resp.data || file;
+                files[filename] = file;
+            } catch (err) {
+                console.warn('获取文件详情失败，使用列表数据兜底');
+            }
+
+            // 设置编辑器内容（兜底为空字符串）
+            markdownEditor.setValue(file.content || '');
             updatePreview();
-            
+
+            // 锁定处理：上锁时只读并禁用保存按钮
+            const saveBtn = document.getElementById('saveFileBtn');
+            if (file.locked) {
+                markdownEditor.setOption('readOnly', 'nocursor');
+                if (saveBtn) saveBtn.disabled = true;
+                showNotification('该文件已上锁，解锁后可继续编辑与保存', 'warning');
+            } else {
+                markdownEditor.setOption('readOnly', false);
+                if (saveBtn) saveBtn.disabled = false;
+            }
+
+            // 显示编辑器
             document.getElementById('editorContainer').style.display = 'block';
             document.getElementById('emptyState').style.display = 'none';
         }
